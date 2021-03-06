@@ -1,6 +1,8 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 
+const parse_token = require("../middlewares/parse-token");
+
 const router = express.Router();
 
 //mongoose models
@@ -49,6 +51,31 @@ router.post("/login", async (req, res) => {
 		console.log(err);
 		res.status(500).json(err);
 	}
+});
+
+//to get a list of users to chat with
+router.get("/users-list", parse_token, async (req, res) => {
+	if (!req.body.user.admin)
+		return res.status(401).json({
+			message: "Unauthorized!",
+		});
+
+	let users;
+	try {
+		users = await User.find({ admin: false }).lean();
+	} catch (err) {
+		console.log(err);
+		return res.status(500).json({
+			message: "Something went wrong!",
+		});
+	}
+
+	users.forEach((u) => (u.password = null));
+
+	res.status(200).json({
+		message: "Retrieved Users!",
+		users: users,
+	});
 });
 
 module.exports = router;

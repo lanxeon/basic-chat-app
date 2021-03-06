@@ -13,3 +13,5 @@ const parseToken = async (req, res, next) => {
 		});
 	}
 };
+
+module.exports = parseToken;

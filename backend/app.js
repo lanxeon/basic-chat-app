@@ -10,7 +10,7 @@ const cors = require("cors");
 const port = process.env.PORT || 4000;
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, { cors: { origin: "*" } });
 
 //mongoose models
 const { Room, User } = require("./models");
