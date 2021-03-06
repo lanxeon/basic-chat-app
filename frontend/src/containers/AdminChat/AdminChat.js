@@ -17,13 +17,20 @@ export default function AdminChat(props) {
 		token: localStorage.getItem("token"),
 		admin: localStorage.getItem("admin"),
 	});
+	const [receiver, setReceiver] = useState("");
 	const [inChat, setInChat] = useState(false);
+	const [socket, setSocket] = useState(null);
 
 	useEffect(() => {
 		let socket = socketClient(server);
 		socket.on("connect", () => {
 			console.log("User connected");
+
+			//now register user as online
+			socket.emit("register active user", { token: user.token });
 		});
+
+		setSocket(socket);
 
 		return () => {};
 	}, []);
@@ -43,6 +50,17 @@ export default function AdminChat(props) {
 		})();
 	}, [user]);
 
+	useEffect(() => {
+		if (receiver) socket.emit("entered chat", { receiver_id: receiver });
+	}, [receiver]);
+
+	//to enter chat room
+	let enterChat = (_id) => {
+		setReceiver(_id);
+		setInChat(true);
+	};
+
+	//to redirect if user is not authenticated
 	let redirect = !props.auth ? <Redirect to="/login" /> : null;
 
 	return (
@@ -50,7 +68,15 @@ export default function AdminChat(props) {
 			<div className={classes.ChatArea}>
 				<div className={classes.ContentWrapper}>
 					<div className={classes.Header}>
-						<button disabled={!inChat}>BACK</button>{" "}
+						<button
+							disabled={!inChat}
+							onClick={() => {
+								setInChat(false);
+								setReceiver(false);
+							}}
+						>
+							BACK
+						</button>{" "}
 						<button
 							onClick={() => {
 								localStorage.clear();
@@ -60,7 +86,7 @@ export default function AdminChat(props) {
 							LOGOUT
 						</button>
 					</div>
-					{inChat ? "chat page" : <UserList users={users} />}
+					{inChat ? "chat page" : <UserList users={users} enterChat={enterChat} />}
 				</div>
 			</div>
 

@@ -18,11 +18,12 @@ const { Room, User } = require("./models");
 //routers
 const regularRoutes = require("./routes/regular");
 const adminRoutes = require("./routes/admin");
+const { emit } = require("process");
 
 // function to parse the JWT
 let parseJWT = (token) => {
 	try {
-		let payload = jsonwebtoken.verify(token);
+		let payload = jsonwebtoken.verify(token, "SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du");
 		return payload;
 	} catch (err) {
 		return null;
@@ -57,13 +58,20 @@ io.on("connection", (socket) => {
 	socket.on("register active user", (payload) => {
 		user = parseJWT(payload.token); //parse the _id of sender
 
+		if (!user) {
+			socket.emit("could not verify user", payload);
+			return;
+		}
+
 		//add the user to the list of active users
-		active_users[user] = {
+		active_users[user._id] = {
 			online: true,
 			socketId: socket.id,
 			last_seen: Date.now(),
 		};
 
+		console.log("Registered user as active!");
+		console.log({ ...active_users[user._id], _id: user._id });
 		socket.emit("user active", user._id);
 	});
 
@@ -89,12 +97,14 @@ io.on("connection", (socket) => {
 			});
 
 			room = await newRoom.save();
-			let roomId = _id;
+			let roomId = room._id;
 			socket.join(roomId);
+			console.log("created and joined room");
 			socket.to(roomId).emit("created room", roomId);
 		} else {
 			socket.join(room._id);
-			socket.to(roomId).emit("joined room", roomId);
+			console.log("joined room");
+			socket.to(room._id).emit("joined room", room._id);
 		}
 	});
 
@@ -125,7 +135,7 @@ io.on("connection", (socket) => {
 		console.log(`client ${socket.id} disconnected`);
 
 		//register last seen of user
-		active_users[user] = {
+		active_users[user._id] = {
 			online: false,
 			socketId: null,
 			last_seen: Date.now(),
