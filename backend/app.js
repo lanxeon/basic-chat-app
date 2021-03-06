@@ -158,3 +158,72 @@ app.post("/regular/register", async (req, res, next) => {
 		},
 	});
 });
+
+app.post("/regular/login", async (req, res, next) => {
+	let username = req.body.usn;
+	let password = req.body.pwd;
+
+	let user;
+	try {
+		user = await User.findOne({
+			username: username,
+			password: password.hashSync(password, 10),
+		});
+	} catch (err) {
+		return res.status(500).json(err);
+	}
+
+	if (!user)
+		return res.status(400).json({
+			message: "Invalid username or password",
+		});
+
+	//create the jwt
+	let token = jsonwebtoken.sign(
+		{ _id: user._id, username: user.username },
+		"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du",
+		{ expiresIn: "15m" }
+	);
+
+	res.status(200).json({
+		message: "user successfully signed in",
+		username: user.username,
+		_id: user._id,
+		token: token,
+	});
+});
+
+app.post("/admin/login", async (req, res) => {
+	let username = req.body.usn;
+	let password = req.body.pwd;
+
+	let user;
+	try {
+		user = await User.findOne({
+			username: username,
+			password: password.hashSync(password, 10),
+			admin: true,
+		});
+	} catch (err) {
+		return res.status(500).json(err);
+	}
+
+	if (!user)
+		return res.status(400).json({
+			message: "Invalid username or password, or user is not admin",
+		});
+
+	//create the jwt
+	let token = jsonwebtoken.sign(
+		{ _id: user._id, username: user.username },
+		"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du",
+		{ expiresIn: "15m" }
+	);
+
+	res.status(200).json({
+		message: "user successfully signed in",
+		username: user.username,
+		_id: user._id,
+		token: token,
+	});
+});
