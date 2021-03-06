@@ -204,6 +204,7 @@ app.post("/regular/login", async (req, res, next) => {
 			username: user.username,
 			_id: user._id,
 			token: token,
+			admin: false,
 		});
 	} catch (err) {
 		console.log(err);
