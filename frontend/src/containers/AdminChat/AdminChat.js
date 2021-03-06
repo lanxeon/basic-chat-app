@@ -47,18 +47,22 @@ export default function AdminChat(props) {
 
 	return (
 		<div className={classes.AdminChatWrapper}>
-			<div className={classes.Header}>
-				<button disabled={!inChat}>BACK</button>{" "}
-				<button
-					onClick={() => {
-						localStorage.clear();
-						window.location.reload();
-					}}
-				>
-					LOGOUT
-				</button>
+			<div className={classes.ChatArea}>
+				<div className={classes.ContentWrapper}>
+					<div className={classes.Header}>
+						<button disabled={!inChat}>BACK</button>{" "}
+						<button
+							onClick={() => {
+								localStorage.clear();
+								window.location.reload();
+							}}
+						>
+							LOGOUT
+						</button>
+					</div>
+					{inChat ? "chat page" : <UserList users={users} />}
+				</div>
 			</div>
-			<div className={classes.ChatArea}>{inChat ? "chat page" : <UserList users={users} />}</div>
 
 			{redirect}
 		</div>
