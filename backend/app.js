@@ -4,10 +4,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const jsonwebtoken = require("jsonwebtoken");
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 const cors = require("cors");
-
-const { ObjectId } = require("mongoose").SchemaTypes;
 
 //set up the express server as well as the socket server
 const port = process.env.PORT || 4000;
@@ -17,6 +14,10 @@ const io = socketIo(server);
 
 //mongoose models
 const { Room, User } = require("./models");
+
+//routers
+const regularRoutes = require("./routes/regular");
+const adminRoutes = require("./routes/admin");
 
 // function to parse the JWT
 let parseJWT = (token) => {
@@ -45,7 +46,7 @@ mongoose
 //launch the server
 server.listen(port, () => console.log("backend listening on port " + port));
 
-// on each connection
+// SOCKET CONNECTION
 io.on("connection", (socket) => {
 	console.log(`new client connected! socketId: ${socket.id}`);
 
@@ -132,126 +133,10 @@ io.on("connection", (socket) => {
 	});
 });
 
+// Enable CORS, parse JSON and urelencoded repsectivelt
 app.use(cors());
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/regular/register", async (req, res, next) => {
-	try {
-		let username = req.body.usn;
-		let password = req.body.pwd;
-
-		let newUser = new User({
-			username: username,
-			password: bcrypt.hashSync(password, 10),
-		});
-
-		let user;
-
-		try {
-			user = await newUser.save();
-		} catch (err) {
-			return res.status(400).json(err);
-		}
-
-		return res.status(201).json({
-			message: "User Registered!",
-			user: {
-				_id: user._id,
-				username: user.username,
-			},
-		});
-	} catch (err) {
-		console.log(err);
-		res.status(500).json(err);
-	}
-});
-
-app.post("/regular/login", async (req, res, next) => {
-	try {
-		let username = req.body.usn;
-		let password = req.body.pwd;
-
-		let user;
-		try {
-			user = await User.findOne({
-				username: username,
-				// password: bcrypt.hashSync(password, 10),
-			});
-		} catch (err) {
-			console.log(err);
-			return res.status(500).json(err);
-		}
-
-		if (!user)
-			return res.status(400).json({
-				message: "Invalid username or password",
-			});
-
-		let passwordMatch = await bcrypt.compare(password, user.password);
-		if (!passwordMatch) return res.status(400).json({ message: "Invalid username or password" });
-
-		//create the jwt
-		let token = jsonwebtoken.sign(
-			{ _id: user._id, username: user.username },
-			"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du"
-			// { expiresIn: "15m" }
-		);
-
-		res.status(200).json({
-			message: "user successfully signed in",
-			username: user.username,
-			_id: user._id,
-			token: token,
-			admin: false,
-		});
-	} catch (err) {
-		console.log(err);
-		res.status(500).json(err);
-	}
-});
-
-app.post("/admin/login", async (req, res) => {
-	try {
-		let username = req.body.usn;
-		let password = req.body.pwd;
-
-		let user;
-		try {
-			user = await User.findOne({
-				username: username,
-				admin: true,
-			});
-		} catch (err) {
-			console.log(err);
-			return res.status(500).json(err);
-		}
-
-		if (!user)
-			return res.status(400).json({
-				message: "Invalid username or password",
-			});
-
-		let passwordMatch = await bcrypt.compare(password, user.password);
-		if (!passwordMatch) return res.status(400).json({ message: "Invalid username or password" });
-
-		//create the jwt
-		let token = jsonwebtoken.sign(
-			{ _id: user._id, username: user.username },
-			"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du"
-			// { expiresIn: "15m" }
-		);
-
-		res.status(200).json({
-			message: "user successfully signed in",
-			username: user.username,
-			_id: user._id,
-			token: token,
-			admin: true,
-		});
-	} catch (err) {
-		console.log(err);
-		res.status(500).json(err);
-	}
-});
+app.use("/regular", regularRoutes);
+app.use("/admin", adminRoutes);
