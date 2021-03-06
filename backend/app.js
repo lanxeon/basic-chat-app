@@ -5,6 +5,8 @@ const socketIo = require("socket.io");
 const jsonwebtoken = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const cors = require("cors");
+
 const { ObjectId } = require("mongoose").SchemaTypes;
 
 //set up the express server as well as the socket server
@@ -130,100 +132,125 @@ io.on("connection", (socket) => {
 	});
 });
 
+app.use(cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.post("/regular/register", async (req, res, next) => {
-	let username = req.body.usn;
-	let password = req.body.pwd;
-
-	let newUser = new User({
-		username: username,
-		password: bcrypt.hashSync(password, 10),
-	});
-
-	let user;
-
 	try {
-		user = await newUser.save();
-	} catch (err) {
-		return res.status(400).json(err);
-	}
+		let username = req.body.usn;
+		let password = req.body.pwd;
 
-	return res.status(201).json({
-		message: "User Registered!",
-		user: {
-			_id: user._id,
-			username: user.username,
-		},
-	});
+		let newUser = new User({
+			username: username,
+			password: bcrypt.hashSync(password, 10),
+		});
+
+		let user;
+
+		try {
+			user = await newUser.save();
+		} catch (err) {
+			return res.status(400).json(err);
+		}
+
+		return res.status(201).json({
+			message: "User Registered!",
+			user: {
+				_id: user._id,
+				username: user.username,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).json(err);
+	}
 });
 
 app.post("/regular/login", async (req, res, next) => {
-	let username = req.body.usn;
-	let password = req.body.pwd;
-
-	let user;
 	try {
-		user = await User.findOne({
-			username: username,
-			password: password.hashSync(password, 10),
+		let username = req.body.usn;
+		let password = req.body.pwd;
+
+		let user;
+		try {
+			user = await User.findOne({
+				username: username,
+				// password: bcrypt.hashSync(password, 10),
+			});
+		} catch (err) {
+			console.log(err);
+			return res.status(500).json(err);
+		}
+
+		if (!user)
+			return res.status(400).json({
+				message: "Invalid username or password",
+			});
+
+		let passwordMatch = await bcrypt.compare(password, user.password);
+		if (!passwordMatch) return res.status(400).json({ message: "Invalid username or password" });
+
+		//create the jwt
+		let token = jsonwebtoken.sign(
+			{ _id: user._id, username: user.username },
+			"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du"
+			// { expiresIn: "15m" }
+		);
+
+		res.status(200).json({
+			message: "user successfully signed in",
+			username: user.username,
+			_id: user._id,
+			token: token,
 		});
 	} catch (err) {
-		return res.status(500).json(err);
+		console.log(err);
+		res.status(500).json(err);
 	}
-
-	if (!user)
-		return res.status(400).json({
-			message: "Invalid username or password",
-		});
-
-	//create the jwt
-	let token = jsonwebtoken.sign(
-		{ _id: user._id, username: user.username },
-		"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du",
-		{ expiresIn: "15m" }
-	);
-
-	res.status(200).json({
-		message: "user successfully signed in",
-		username: user.username,
-		_id: user._id,
-		token: token,
-	});
 });
 
 app.post("/admin/login", async (req, res) => {
-	let username = req.body.usn;
-	let password = req.body.pwd;
-
-	let user;
 	try {
-		user = await User.findOne({
-			username: username,
-			password: password.hashSync(password, 10),
+		let username = req.body.usn;
+		let password = req.body.pwd;
+
+		let user;
+		try {
+			user = await User.findOne({
+				username: username,
+				admin: true,
+			});
+		} catch (err) {
+			console.log(err);
+			return res.status(500).json(err);
+		}
+
+		if (!user)
+			return res.status(400).json({
+				message: "Invalid username or password",
+			});
+
+		let passwordMatch = await bcrypt.compare(password, user.password);
+		if (!passwordMatch) return res.status(400).json({ message: "Invalid username or password" });
+
+		//create the jwt
+		let token = jsonwebtoken.sign(
+			{ _id: user._id, username: user.username },
+			"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du"
+			// { expiresIn: "15m" }
+		);
+
+		res.status(200).json({
+			message: "user successfully signed in",
+			username: user.username,
+			_id: user._id,
+			token: token,
 			admin: true,
 		});
 	} catch (err) {
-		return res.status(500).json(err);
+		console.log(err);
+		res.status(500).json(err);
 	}
-
-	if (!user)
-		return res.status(400).json({
-			message: "Invalid username or password, or user is not admin",
-		});
-
-	//create the jwt
-	let token = jsonwebtoken.sign(
-		{ _id: user._id, username: user.username },
-		"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du",
-		{ expiresIn: "15m" }
-	);
-
-	res.status(200).json({
-		message: "user successfully signed in",
-		username: user.username,
-		_id: user._id,
-		token: token,
-	});
 });
