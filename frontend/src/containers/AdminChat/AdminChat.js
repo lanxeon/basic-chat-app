@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import classes from "./AdminChat.module.css";
 
+import UserList from "./UserList/UserList";
+
 import socketClient from "socket.io-client";
 import axios from "axios";
+import { Redirect } from "react-router";
 
 let server = "http://localhost:4000";
 
-export default function AdminChat() {
+export default function AdminChat(props) {
 	const [users, setUsers] = useState([]);
 	const [user, setUser] = useState({
 		_id: localStorage.getItem("_id"),
@@ -32,6 +35,7 @@ export default function AdminChat() {
 					headers: { Authorization: `Bearer ${user.token}` },
 				});
 
+				console.log(usersList.data.users);
 				setUsers(usersList.data.users);
 			} catch (err) {
 				console.log(err);
@@ -39,9 +43,24 @@ export default function AdminChat() {
 		})();
 	}, [user]);
 
+	let redirect = !props.auth ? <Redirect to="/login" /> : null;
+
 	return (
 		<div className={classes.AdminChatWrapper}>
-			<div className={classes.ChatArea}>{inChat ? "chat page" : "list of users"}</div>
+			<div className={classes.Header}>
+				<button disabled={!inChat}>BACK</button>{" "}
+				<button
+					onClick={() => {
+						localStorage.clear();
+						window.location.reload();
+					}}
+				>
+					LOGOUT
+				</button>
+			</div>
+			<div className={classes.ChatArea}>{inChat ? "chat page" : <UserList users={users} />}</div>
+
+			{redirect}
 		</div>
 	);
 }

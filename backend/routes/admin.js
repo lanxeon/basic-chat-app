@@ -1,4 +1,5 @@
 const express = require("express");
+const jsonwebtoken = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 const parse_token = require("../middlewares/parse-token");
@@ -55,10 +56,11 @@ router.post("/login", async (req, res) => {
 
 //to get a list of users to chat with
 router.get("/users-list", parse_token, async (req, res) => {
-	if (!req.body.user.admin)
+	if (!req.body.user.admin) {
 		return res.status(401).json({
 			message: "Unauthorized!",
 		});
+	}
 
 	let users;
 	try {

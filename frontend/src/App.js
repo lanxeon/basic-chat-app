@@ -4,7 +4,7 @@ import { Switch, Route, Redirect } from "react-router-dom";
 
 import Auth from "./containers/Auth/Auth";
 import AdminChat from "./containers/AdminChat/AdminChat";
-import RegualarChat from "./containers/RegularChat/RegularChat";
+import RegularChat from "./containers/RegularChat/RegularChat";
 
 function App() {
 	const [authenticated, setAuthenticated] = useState(false);
@@ -31,10 +31,10 @@ function App() {
 					<Auth />
 				</Route>
 				<Route path="/chat/admin">
-					<AdminChat />
+					<AdminChat auth={authenticated} />
 				</Route>
 				<Route path="/chat/regular">
-					<RegualarChat />
+					<RegularChat auth={authenticated} />
 				</Route>
 				<Route path="/">
 					<Redirect to="/login" />
