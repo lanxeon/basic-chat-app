@@ -1,0 +1,23 @@
+.AdminChatWrapper {
+	background-color: #ccc;
+	width: 100%;
+	height: 100%;
+	position: relative;
+}
+
+.ChatArea {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+
+	background-color: white;
+
+	width: 75%;
+	height: 80%;
+}
+
+.ChatArea > div {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}

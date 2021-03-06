@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import classes from "./App.module.css";
 import { Switch, Route, Redirect } from "react-router-dom";
+
 import Auth from "./containers/Auth/Auth";
+import AdminChat from "./containers/AdminChat/AdminChat";
+import RegualarChat from "./containers/RegularChat/RegularChat";
 
 function App() {
 	const [authenticated, setAuthenticated] = useState(false);
@@ -27,8 +30,12 @@ function App() {
 				<Route path="/login">
 					<Auth />
 				</Route>
-				<Route path="/chat/admin">admin chat</Route>
-				<Route path="/chat/regular">regular chat</Route>
+				<Route path="/chat/admin">
+					<AdminChat />
+				</Route>
+				<Route path="/chat/regular">
+					<RegualarChat />
+				</Route>
 				<Route path="/">
 					<Redirect to="/login" />
 				</Route>

@@ -26,6 +26,8 @@ const Auth = (props) => {
 			localStorage.setItem("_id", loggedIn.data._id);
 			localStorage.setItem("username", loggedIn.data.username);
 			localStorage.setItem("admin", loggedIn.data.admin);
+
+			window.location.reload();
 		} catch (err) {
 			console.log(err);
 		}

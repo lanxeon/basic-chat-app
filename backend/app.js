@@ -33,7 +33,7 @@ let active_users = {};
 
 //connect to mongoDB server
 mongoose
-	.connect("mongodb://localhost:27017", {
+	.connect("mongodb://localhost:27017/chat", {
 		useNewUrlParser: true,
 		useCreateIndex: true,
 		useFindAndModify: true,
