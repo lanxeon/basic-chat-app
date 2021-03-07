@@ -33,7 +33,10 @@ export default function Chat(props) {
 		);
 
 		//on getting receiver details
-		props.socket.on("receiver activity details", (payload) => setReceiverActive(payload));
+		props.socket.on("receiver activity details", (payload) => {
+			console.log("yay user is updating", payload);
+			setReceiverActive(payload);
+		});
 
 		//on new message
 		props.socket.on("private message", (msg) => {
