@@ -23,7 +23,7 @@ const Auth = (props) => {
 			console.log(loggedIn.data);
 
 			localStorage.setItem("token", loggedIn.data.token);
-			localStorage.setItem("_id", loggedIn.data._id);
+			localStorage.setItem("_id", loggedIn.data._id.toString());
 			localStorage.setItem("username", loggedIn.data.username);
 			localStorage.setItem("admin", loggedIn.data.admin);
 

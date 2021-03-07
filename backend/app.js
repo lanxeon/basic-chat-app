@@ -54,7 +54,7 @@ io.on("connection", (socket) => {
 
 	let user; //sender object
 	let room; //room object in database
-	let roomId;
+	let roomId; //roomId
 	let receiver; //receiver id
 
 	socket.on("register active user", (payload) => {
@@ -73,14 +73,15 @@ io.on("connection", (socket) => {
 		};
 
 		console.log("Registered user as active!");
-		console.log({ ...active_users[user._id], _id: user._id });
-		socket.emit("user active", user._id);
+		console.log({ ...active_users[user._id.toString()], _id: user._id.toString() });
+		io.emit("user activity change", { _id: user._id.toString() });
+		socket.emit("user active", user._id.toString());
 	});
 
 	socket.on("entered chat", async (payload) => {
 		let user1 = user;
 		if (!user1) return; // if unauthenticated user, then deny access
-		let user2 = payload.receiver_id; //send the _id of receiver in the payload
+		let user2 = payload.receiver_id.toString(); //send the _id of receiver in the payload
 		receiver = user2;
 
 		//check if room exists
@@ -102,18 +103,18 @@ io.on("connection", (socket) => {
 			roomId = room._id.toString();
 			socket.join(roomId);
 			console.log("created and joined room");
-			socket.to(roomId).emit("joined room", roomId);
+			io.to(roomId).emit("joined room", roomId);
 		} else {
 			roomId = room._id.toString();
 			socket.join(roomId);
 			console.log("joined room " + roomId);
-			socket.to(roomId).emit("joined room", roomId);
+			io.to(roomId).emit("joined room", roomId);
 		}
 	});
 
 	//get signal to send user activity details
 	socket.on("get user activity", (recvid) => {
-		let activity = active_users[recvid];
+		let activity = active_users[recvid.toString()];
 		socket.emit("receiver activity details", activity);
 	});
 
@@ -145,7 +146,7 @@ io.on("connection", (socket) => {
 
 			//incase if receiver is not in room
 			if (active_users[receiver] && active_users[receiver].online) {
-				socket.to(active_users[receiver].socketId).emit("message notification", messageToSend);
+				io.to(active_users[receiver].socketId).emit("message notification", messageToSend);
 			}
 		}
 	});
@@ -175,7 +176,7 @@ io.on("connection", (socket) => {
 		//emit to the room that user has gone offline
 		if (room) io.emit("user left chat");
 		//emit that the user is no longer active
-		io.emit("user activity change", { _id: active_users[user._id] });
+		io.to(roomId).emit("user activity change", { _id: user._id.toString() });
 	});
 });
 

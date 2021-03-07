@@ -103,10 +103,12 @@ const RegularChat = (props) => {
 
 	useEffect(() => {
 		if (receiver && Socket) {
-			// //checking is user is active
-			// Socket.on("user activity change", (payload) => {
-			// 	if (payload._id === receiver._id) Socket.emit("get user activity", receiver._id);
-			// });
+			//checking is user is active
+			Socket.on("user activity change", (payload) => {
+				if (payload._id.toString() === receiver._id.toString())
+					Socket.emit("get user activity", receiver._id.toString());
+			});
+
 			//on entering room successfully
 			Socket.on("joined room", (payload) => {
 				console.log("joined room");

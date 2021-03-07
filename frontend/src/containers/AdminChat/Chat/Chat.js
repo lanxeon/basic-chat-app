@@ -9,7 +9,6 @@ export default function Chat(props) {
 	const [text, setText] = useState("");
 
 	useEffect(() => {
-		console.log("Entered useEffect");
 		//get chats
 		(async () => {
 			try {
@@ -28,9 +27,9 @@ export default function Chat(props) {
 
 	useEffect(() => {
 		//on entering room successfully
-		props.socket.on("joined room", (payload) =>
-			props.socket.emit("get user activity", props.receiver._id)
-		);
+		props.socket.on("joined room", (payload) => {
+			props.socket.emit("get user activity", props.receiver._id.toString());
+		});
 
 		//on getting receiver details
 		props.socket.on("receiver activity details", (payload) => {
@@ -45,7 +44,8 @@ export default function Chat(props) {
 		});
 
 		props.socket.on("user activity change", (payload) => {
-			if (payload._id === props.receiver._id)
+			console.log("I'm getting on user activity change");
+			if (payload._id === props.receiver._id.toString())
 				props.socket.emit("get user activity", props.receiver._id.toString());
 		});
 	}, []);
