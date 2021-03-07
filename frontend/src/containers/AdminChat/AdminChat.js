@@ -12,7 +12,7 @@ let server = "http://localhost:4000";
 
 export default function AdminChat(props) {
 	const [users, setUsers] = useState([]);
-	const [user, setUser] = useState({
+	const [user] = useState({
 		_id: localStorage.getItem("_id"),
 		username: localStorage.getItem("username"),
 		token: localStorage.getItem("token"),

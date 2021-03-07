@@ -170,7 +170,7 @@ io.on("connection", (socket) => {
 		};
 
 		//emit to the room that user has gone offline
-		if (room) socket.emit("user left chat");
+		if (room) io.emit("user left chat");
 	});
 });
 

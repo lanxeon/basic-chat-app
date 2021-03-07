@@ -50,6 +50,8 @@ export default function Chat(props) {
 			msgType: "text",
 			content: text,
 		});
+
+		setText("");
 	};
 
 	return (
@@ -67,7 +69,7 @@ export default function Chat(props) {
 						? receiverActive.online
 							? "Online"
 							: receiverActive.last_seen
-						: "offline"}
+						: "Offline"}
 				</div>
 			</div>
 

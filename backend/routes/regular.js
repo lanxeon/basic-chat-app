@@ -6,6 +6,7 @@ const router = express.Router();
 
 //mongoose models
 const { Room, User } = require("../models");
+const parseToken = require("../middlewares/parse-token");
 
 //to register customer
 router.post("/register", async (req, res, next) => {
@@ -81,6 +82,25 @@ router.post("/login", async (req, res, next) => {
 	} catch (err) {
 		console.log(err);
 		res.status(500).json(err);
+	}
+});
+
+router.get("/get-admin", parseToken, async (req, res) => {
+	try {
+		let admin = await User.findOne({ admin: true });
+
+		return res.status(200).json({
+			message: "Admin ID found!",
+			admin: {
+				_id: admin._id,
+				username: admin.username,
+			},
+		});
+	} catch (err) {
+		console.log(err);
+		res.status(500).json({
+			message: "Something went wrong!",
+		});
 	}
 });
 
