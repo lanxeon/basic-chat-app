@@ -6,24 +6,51 @@ import axios from "axios";
 export default function Chat(props) {
 	const [receiverActive, setReceiverActive] = useState(null);
 	const [messages, setMessages] = useState([]);
+	const [text, setText] = useState("");
 
 	useEffect(() => {
+		console.log("Entered useEffect");
 		//get chats
 		(async () => {
 			try {
-				let messageDb = await axios.get("http://localhost:4000/chats", {
-					headers: { Authorization: `Bearer ${props.user.token}` },
+				let messageDb = await axios.get("http://localhost:4000/chats/" + props.receiver._id, {
+					headers: { Authorization: `Bearer ${props.sender.token}` },
 				});
 
-				setMessages(messageDb);
-			} catch (err) {}
-		})();
-	});
+				console.log(messageDb);
 
-	//on entering room successfully
-	props.socket.on("joined room", (payload) => props.socket.emit("get user activity", props.receiver._id));
-	//on getting receiver details
-	props.socket.on("receiver activity details", (payload) => setReceiverActive(payload));
+				setMessages(messageDb.data.messages);
+			} catch (err) {
+				console.log(err);
+			}
+		})();
+	}, [props.sender]);
+
+	useEffect(() => {
+		//on entering room successfully
+		props.socket.on("joined room", (payload) =>
+			props.socket.emit("get user activity", props.receiver._id)
+		);
+		//on getting receiver details
+		props.socket.on("receiver activity details", (payload) => setReceiverActive(payload));
+		//on new message
+		props.socket.on("private message", (msg) => {
+			console.log(msg);
+			setMessages((msgs) => [...msgs, msg]);
+		});
+	}, []);
+
+	const sendMessageHandler = () => {
+		if (text.length === 0) return;
+
+		console.log("emitting send message from client side");
+
+		props.socket.emit("send message", {
+			sender: props.sender,
+			msgType: "text",
+			content: text,
+		});
+	};
 
 	return (
 		<div className={classes.ChatWrapper}>
@@ -46,14 +73,44 @@ export default function Chat(props) {
 
 			<div className={classes.ChatListContainer}>
 				{messages.map((message) => (
-					<div className={classes.MessageContainer}>
+					<div
+						className={`${classes.MessageContainer} ${
+							message.sender === props.sender._id ? classes.Sender : classes.Receiver
+						}`}
+					>
 						<span
 							className={`${classes.Message} ${
-								message.sender === props.sender._id ? classes.Sender : classes.Receiver
+								message.sender === props.sender._id
+									? classes.SenderText
+									: classes.ReceiverText
 							}`}
-						/>
+						>
+							{message.content}
+						</span>
 					</div>
 				))}
+			</div>
+			<div className={classes.msgBar}>
+				<div className={classes.TextArea}>
+					{/* <input type="file" id = "attachment" name = "attachment" style="display: none;">
+                    <button id ="attach_file" class = "btn info attach" onclick="document.getElementById('attachment').click()">
+                        <i class="material-icons">attach_file</i>
+                    </button> */}
+					<textarea
+						rows="3"
+						cols="80"
+						className={classes.MyMessage}
+						placeholder="Type or gesture a message"
+						value={text}
+						onChange={(e) => setText(e.target.value)}
+					></textarea>
+					<button
+						className={`${classes.btn} ${classes.info} ${classes.send}`}
+						onClick={sendMessageHandler}
+					>
+						<i className="material-icons">send</i>
+					</button>
+				</div>
 			</div>
 		</div>
 	);

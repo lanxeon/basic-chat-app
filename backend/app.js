@@ -116,25 +116,46 @@ io.on("connection", (socket) => {
 	});
 
 	//on sending chat
-	socket.on("send message", async (payload) => {
+	socket.on("send message", async (message) => {
 		let read = false;
-		socket.to(room._id).emit("private message", payload);
 
-		//incase if receiver is not in room
-		if (active_users[receiver].online) {
-			socket.to(active_users[receiver].socketId).emit("message notification", payload);
-		}
+		console.log(`send message from ${socket.id}`);
 
 		//in either case update the message history on backend
-		room.messages.append({
+		room.messages.push({
 			sender: user,
-			msgType: payload.msgType,
-			content: payload.message,
+			msgType: message.msgType,
+			content: message.content,
 			timestamp: Date.now(),
 			seen: read,
 		});
 
-		room = await room.save(); // update the model
+		try {
+			room = await room.save(); // update the model
+		} catch (err) {
+			console.log(err);
+		}
+
+		let messageToSend = room ? room.messages[room.messages.length - 1] : null;
+
+		if (messageToSend) {
+			io.to(room._id).emit("private message", messageToSend);
+			//incase if receiver is not in room
+			if (active_users[receiver] && active_users[receiver].online) {
+				socket.to(active_users[receiver].socketId).emit("message notification", messageToSend);
+			}
+		}
+	});
+
+	// //on receiving chat
+	// socket.on("receive message", (message) => {
+	// 	console.log("message received at server");
+	// 	socket.to(room._id).emit("new message", message);
+	// });
+
+	socket.on("left chat", () => {
+		console.log("User has left chat!");
+		if (room) socket.leave(room._id);
 	});
 
 	//to handle socket disconnect
@@ -147,6 +168,9 @@ io.on("connection", (socket) => {
 			socketId: null,
 			last_seen: Date.now(),
 		};
+
+		//emit to the room that user has gone offline
+		if (room) socket.emit("user left chat");
 	});
 });
 
@@ -158,14 +182,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/regular", regularRoutes);
 app.use("/admin", adminRoutes);
 
-app.get("/chats", parseToken, async (req, res) => {
+app.get("/chats/:receiver", parseToken, async (req, res) => {
 	try {
 		let room;
 		try {
 			room = await Room.findOne({
 				$or: [
-					{ user1: req.body.user._id, user2: req.body.receiver },
-					{ user1: req.body.receiver, user2: req.body.user._id },
+					{ user1: req.body.user._id, user2: req.params.receiver },
+					{ user1: req.params.receiver, user2: req.body.user._id },
 				],
 			});
 		} catch (err) {

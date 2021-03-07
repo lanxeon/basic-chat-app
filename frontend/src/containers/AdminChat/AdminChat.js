@@ -33,7 +33,9 @@ export default function AdminChat(props) {
 
 		setSocket(socket);
 
-		return () => {};
+		return () => {
+			socket.disconnect();
+		};
 	}, []);
 
 	useEffect(() => {
@@ -43,7 +45,7 @@ export default function AdminChat(props) {
 					headers: { Authorization: `Bearer ${user.token}` },
 				});
 
-				console.log(usersList.data.users);
+				// console.log(usersList.data.users);
 				setUsers(usersList.data.users);
 			} catch (err) {
 				console.log(err);
