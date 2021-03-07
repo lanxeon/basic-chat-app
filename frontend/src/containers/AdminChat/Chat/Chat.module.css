@@ -143,25 +143,19 @@
 
 .ReceiverText {
 	display: inline-block;
-	position: absolute;
 	border-top-left-radius: 0;
-	left: 2%;
 	max-width: 62%;
 	white-space: initial;
 }
 
 .ReceiverTextEmpty {
 	border-top-right-radius: 0;
-	position: absolute;
-	left: 2%;
 	width: 0;
 	padding: 0;
 }
 
 .ReceiverImg {
 	background-color: #4d4d4d;
-	position: absolute;
-	left: 2%;
 	max-width: 62%;
 	border-radius: 0 5px 5px 5px;
 	padding: 10px;

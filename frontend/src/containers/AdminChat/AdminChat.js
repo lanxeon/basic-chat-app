@@ -54,7 +54,10 @@ export default function AdminChat(props) {
 	}, [user]);
 
 	useEffect(() => {
-		if (inChat && receiver && socket) socket.emit("entered chat", { receiver_id: receiver._id });
+		if (inChat && receiver && socket) {
+			console.log("going to enter chat");
+			socket.emit("entered chat", { receiver_id: receiver._id });
+		}
 	}, [inChat, receiver, socket]);
 
 	//to enter chat room

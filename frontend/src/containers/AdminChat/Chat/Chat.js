@@ -46,7 +46,7 @@ export default function Chat(props) {
 
 		props.socket.on("user activity change", (payload) => {
 			if (payload._id === props.receiver._id)
-				props.socket.emit("get user activity", props.receiver._id);
+				props.socket.emit("get user activity", props.receiver._id.toString());
 		});
 	}, []);
 

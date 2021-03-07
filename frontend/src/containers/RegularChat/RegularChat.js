@@ -2,6 +2,8 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import classes from "./RegularChat.module.css";
 
+import { Redirect } from "react-router-dom";
+
 import socketClient from "socket.io-client";
 
 const RegularChat = (props) => {
@@ -15,6 +17,27 @@ const RegularChat = (props) => {
 	const [receiverActive, setReceiverActive] = useState(null);
 	const [Socket, setSocket] = useState(null);
 	const [messages, setMessages] = useState([]);
+	const [text, setText] = useState("");
+
+	let handleInput = (e) => {
+		setText(e.target.value);
+	};
+
+	let handleSubmit = (e) => {
+		e.preventDefault();
+
+		if (text.length === 0) return;
+
+		console.log("emitting send message from client side");
+
+		Socket.emit("send message", {
+			sender: user._id,
+			msgType: "text",
+			content: text,
+		});
+
+		setText("");
+	};
 
 	//get the admin's _id first
 	useEffect(() => {
@@ -57,9 +80,6 @@ const RegularChat = (props) => {
 			// 	if (payload._id === receiver._id) Socket.emit("get user activity", receiver._id);
 			// });
 
-			//on entering room successfully
-			socket.on("joined room", (payload) => socket.emit("get user activity", receiver._id));
-
 			//on getting receiver details
 			socket.on("receiver activity details", (payload) => {
 				console.log("yay user is updating", payload);
@@ -68,6 +88,7 @@ const RegularChat = (props) => {
 
 			//on new message
 			socket.on("private message", (msg) => {
+				console.log("hit the private message event");
 				console.log(msg);
 				setMessages((msgs) => [...msgs, msg]);
 			});
@@ -86,10 +107,20 @@ const RegularChat = (props) => {
 			// Socket.on("user activity change", (payload) => {
 			// 	if (payload._id === receiver._id) Socket.emit("get user activity", receiver._id);
 			// });
+			//on entering room successfully
+			Socket.on("joined room", (payload) => {
+				console.log("joined room");
+				Socket.emit("get user activity", receiver._id);
+			});
+
+			console.log("going to emit the event!");
 
 			Socket.emit("entered chat", { receiver_id: receiver._id });
 		}
 	}, [Socket, receiver]);
+
+	//to redirect if user is not authenticated
+	let redirect = !props.auth ? <Redirect to="/login" /> : null;
 
 	return (
 		<div className={classes.RegularChatWrapper}>
@@ -224,7 +255,7 @@ const RegularChat = (props) => {
 							</div>
 						))}
 					</div>
-					<form className={classes["conversation-compose"]}>
+					<form className={classes["conversation-compose"]} onSubmit={handleSubmit}>
 						<div className={classes["emoji"]}>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -244,7 +275,8 @@ const RegularChat = (props) => {
 						</div>
 						<input
 							className={classes["input-msg"]}
-							name="input"
+							value={text}
+							onChange={handleInput}
 							placeholder="Type a mes.."
 							autoComplete="off"
 							autoFocus
@@ -261,6 +293,7 @@ const RegularChat = (props) => {
 					</form>
 				</div>
 			</div>
+			{redirect}
 		</div>
 	);
 };

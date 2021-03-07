@@ -67,7 +67,7 @@ router.post("/login", async (req, res, next) => {
 
 		//create the jwt
 		let token = jsonwebtoken.sign(
-			{ _id: user._id, username: user.username },
+			{ _id: user._id.toString(), username: user.username },
 			"SuPeR sEcReT kEy mc3om8c3831yj53admdasmlk34989du"
 			// { expiresIn: "15m" }
 		);

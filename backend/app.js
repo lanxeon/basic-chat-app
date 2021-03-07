@@ -54,6 +54,7 @@ io.on("connection", (socket) => {
 
 	let user; //sender object
 	let room; //room object in database
+	let roomId;
 	let receiver; //receiver id
 
 	socket.on("register active user", (payload) => {
@@ -65,7 +66,7 @@ io.on("connection", (socket) => {
 		}
 
 		//add the user to the list of active users
-		active_users[user._id] = {
+		active_users[user._id.toString()] = {
 			online: true,
 			socketId: socket.id,
 			last_seen: Date.now(),
@@ -98,21 +99,22 @@ io.on("connection", (socket) => {
 			});
 
 			room = await newRoom.save();
-			let roomId = room._id;
+			roomId = room._id.toString();
 			socket.join(roomId);
 			console.log("created and joined room");
 			socket.to(roomId).emit("joined room", roomId);
 		} else {
-			socket.join(room._id);
-			console.log("joined room");
-			socket.to(room._id).emit("joined room", room._id);
+			roomId = room._id.toString();
+			socket.join(roomId);
+			console.log("joined room " + roomId);
+			socket.to(roomId).emit("joined room", roomId);
 		}
 	});
 
 	//get signal to send user activity details
 	socket.on("get user activity", (recvid) => {
 		let activity = active_users[recvid];
-		socket.to(socket.id).emit("receiver activity details", activity);
+		socket.emit("receiver activity details", activity);
 	});
 
 	//on sending chat
@@ -139,7 +141,8 @@ io.on("connection", (socket) => {
 		let messageToSend = room ? room.messages[room.messages.length - 1] : null;
 
 		if (messageToSend) {
-			io.to(room._id).emit("private message", messageToSend);
+			io.to(roomId).emit("private message", messageToSend);
+
 			//incase if receiver is not in room
 			if (active_users[receiver] && active_users[receiver].online) {
 				socket.to(active_users[receiver].socketId).emit("message notification", messageToSend);
@@ -155,7 +158,7 @@ io.on("connection", (socket) => {
 
 	socket.on("left chat", () => {
 		console.log("User has left chat!");
-		if (room) socket.leave(room._id);
+		if (room) socket.leave(roomId);
 	});
 
 	//to handle socket disconnect
