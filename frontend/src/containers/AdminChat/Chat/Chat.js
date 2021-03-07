@@ -31,12 +31,19 @@ export default function Chat(props) {
 		props.socket.on("joined room", (payload) =>
 			props.socket.emit("get user activity", props.receiver._id)
 		);
+
 		//on getting receiver details
 		props.socket.on("receiver activity details", (payload) => setReceiverActive(payload));
+
 		//on new message
 		props.socket.on("private message", (msg) => {
 			console.log(msg);
 			setMessages((msgs) => [...msgs, msg]);
+		});
+
+		props.socket.on("user activity change", (payload) => {
+			if (payload._id === props.receiver._id)
+				props.socket.emit("get user activity", props.receiver._id);
 		});
 	}, []);
 
@@ -76,6 +83,7 @@ export default function Chat(props) {
 			<div className={classes.ChatListContainer}>
 				{messages.map((message) => (
 					<div
+						key={message._id}
 						className={`${classes.MessageContainer} ${
 							message.sender === props.sender._id ? classes.Sender : classes.Receiver
 						}`}

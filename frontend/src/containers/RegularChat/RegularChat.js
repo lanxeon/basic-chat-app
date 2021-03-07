@@ -2,6 +2,8 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import classes from "./RegularChat.module.css";
 
+import socketClient from "socket.io-client";
+
 const RegularChat = (props) => {
 	const [user] = useState({
 		_id: localStorage.getItem("_id"),
@@ -10,7 +12,9 @@ const RegularChat = (props) => {
 		admin: localStorage.getItem("admin"),
 	});
 	const [receiver, setReceiver] = useState(null);
-	const [socket, setSocket] = useState(null);
+	const [receiverActive, setReceiverActive] = useState(null);
+	const [Socket, setSocket] = useState(null);
+	const [messages, setMessages] = useState([]);
 
 	//get the admin's _id first
 	useEffect(() => {
@@ -26,11 +30,42 @@ const RegularChat = (props) => {
 				console.log(err);
 			}
 
-			setReceiver(admin.data.admin);
+			if (admin) setReceiver(admin.data.admin);
 		})();
+		let socket = socketClient("http://localhost:4000");
+		socket.on("connect", () => {
+			console.log("User connected");
 
-		return () => {};
-	});
+			//now register user as online
+			socket.emit("register active user", { token: user.token });
+
+			socket.on("user activity change", (payload) => {
+				if (payload._id === receiver._id) Socket.emit("get user activity", receiver._id);
+			});
+
+			//on entering room successfully
+			socket.on("joined room", (payload) => socket.emit("get user activity", receiver._id));
+
+			//on getting receiver details
+			socket.on("receiver activity details", (payload) => setReceiverActive(payload));
+
+			//on new message
+			socket.on("private message", (msg) => {
+				console.log(msg);
+				setMessages((msgs) => [...msgs, msg]);
+			});
+		});
+
+		setSocket(socket);
+
+		return () => {
+			socket.disconnect();
+		};
+	}, []);
+
+	useEffect(() => {
+		if (receiver && Socket) Socket.emit("entered chat", { receiver_id: receiver._id });
+	}, [Socket, receiver]);
 
 	return (
 		<div className={classes.RegularChatWrapper}>

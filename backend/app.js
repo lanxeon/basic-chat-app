@@ -171,6 +171,8 @@ io.on("connection", (socket) => {
 
 		//emit to the room that user has gone offline
 		if (room) io.emit("user left chat");
+		//emit that the user is no longer active
+		io.emit("user activity change", { _id: active_users[user._id] });
 	});
 });
 
