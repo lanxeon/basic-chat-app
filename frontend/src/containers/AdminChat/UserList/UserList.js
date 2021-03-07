@@ -5,7 +5,7 @@ function UserList(props) {
 	return (
 		<div className={classes.UserList}>
 			{props.users.map((user) => (
-				<div className={classes.UserDetails} key={user._id} onClick={() => props.enterChat(user._id)}>
+				<div className={classes.UserDetails} key={user._id} onClick={() => props.enterChat(user)}>
 					<div className={classes.imgContainer}>
 						<img
 							src="https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import classes from "./AdminChat.module.css";
 
 import UserList from "./UserList/UserList";
+import Chat from "./Chat/Chat";
 
 import socketClient from "socket.io-client";
 import axios from "axios";
@@ -17,7 +18,7 @@ export default function AdminChat(props) {
 		token: localStorage.getItem("token"),
 		admin: localStorage.getItem("admin"),
 	});
-	const [receiver, setReceiver] = useState("");
+	const [receiver, setReceiver] = useState({});
 	const [inChat, setInChat] = useState(false);
 	const [socket, setSocket] = useState(null);
 
@@ -51,12 +52,12 @@ export default function AdminChat(props) {
 	}, [user]);
 
 	useEffect(() => {
-		if (receiver) socket.emit("entered chat", { receiver_id: receiver });
-	}, [receiver]);
+		if (inChat && receiver && socket) socket.emit("entered chat", { receiver_id: receiver._id });
+	}, [inChat, receiver, socket]);
 
 	//to enter chat room
-	let enterChat = (_id) => {
-		setReceiver(_id);
+	let enterChat = (user) => {
+		setReceiver(user);
 		setInChat(true);
 	};
 
@@ -86,7 +87,11 @@ export default function AdminChat(props) {
 							LOGOUT
 						</button>
 					</div>
-					{inChat ? "chat page" : <UserList users={users} enterChat={enterChat} />}
+					{inChat ? (
+						<Chat socket={socket} receiver={receiver} sender={user} />
+					) : (
+						<UserList users={users} enterChat={enterChat} />
+					)}
 				</div>
 			</div>
 

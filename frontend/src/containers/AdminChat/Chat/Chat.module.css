@@ -1,0 +1,57 @@
+.ChatWrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	margin-top: 150px;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+}
+
+.TopUser {
+	position: absolute;
+	top: 60px;
+	left: 0;
+	width: 100%;
+	height: 80px;
+
+	align-items: center;
+	justify-content: center;
+
+	display: flex;
+	box-shadow: 0 3px 4px #ccc;
+}
+
+.usn {
+	font-size: 1.5em;
+	margin-left: 12px;
+}
+
+.imgContainer {
+	overflow: hidden;
+	position: relative;
+	height: 50px;
+	width: 50px;
+
+	border: none;
+	border-radius: 50%;
+
+	margin-left: 12px;
+}
+
+.imgContainer img {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+
+.Online {
+	margin-left: 12px;
+}
+
+.ChatListContainer {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}

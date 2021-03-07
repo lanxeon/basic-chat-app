@@ -19,6 +19,7 @@ const { Room, User } = require("./models");
 const regularRoutes = require("./routes/regular");
 const adminRoutes = require("./routes/admin");
 const { emit } = require("process");
+const parseToken = require("./middlewares/parse-token");
 
 // function to parse the JWT
 let parseJWT = (token) => {
@@ -51,7 +52,7 @@ server.listen(port, () => console.log("backend listening on port " + port));
 io.on("connection", (socket) => {
 	console.log(`new client connected! socketId: ${socket.id}`);
 
-	let user; //sender id
+	let user; //sender object
 	let room; //room object in database
 	let receiver; //receiver id
 
@@ -100,12 +101,18 @@ io.on("connection", (socket) => {
 			let roomId = room._id;
 			socket.join(roomId);
 			console.log("created and joined room");
-			socket.to(roomId).emit("created room", roomId);
+			socket.to(roomId).emit("joined room", roomId);
 		} else {
 			socket.join(room._id);
 			console.log("joined room");
 			socket.to(room._id).emit("joined room", room._id);
 		}
+	});
+
+	//get signal to send user activity details
+	socket.on("get user activity", (recvid) => {
+		let activity = active_users[recvid];
+		socket.to(socket.id).emit("receiver activity details", activity);
 	});
 
 	//on sending chat
@@ -150,3 +157,37 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/regular", regularRoutes);
 app.use("/admin", adminRoutes);
+
+app.get("/chats", parseToken, async (req, res) => {
+	try {
+		let room;
+		try {
+			room = await Room.findOne({
+				$or: [
+					{ user1: req.body.user._id, user2: req.body.receiver },
+					{ user1: req.body.receiver, user2: req.body.user._id },
+				],
+			});
+		} catch (err) {
+			console.log(err);
+			return res.status(500).json({
+				message: "Something went wrong",
+			});
+		}
+
+		if (!room)
+			return res.status(200).json({
+				message: "No chats exist between the 2 yet",
+				messages: [],
+			});
+
+		let messages = room.messages;
+		res.status(200).json({
+			message: "Chats Found!",
+			messages: messages,
+		});
+	} catch (error) {
+		console.log(error);
+		res.status(500).json(error);
+	}
+});
